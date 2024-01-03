@@ -5,8 +5,6 @@ import "@account-abstraction/contracts/interfaces/IAccount.sol";
 import "@account-abstraction/contracts/core/EntryPoint.sol";
 
 contract Account is IAccount {
-    // Define the structure of the account contract.
-    // This is a simple example. You can add more functionality as needed.
     address public owner;
     uint256 public count;
 
@@ -14,8 +12,8 @@ contract Account is IAccount {
         owner = _owner;
     }
 
-    // Add functions to manage the account, execute transactions, etc.
     function validateUserOp(UserOperation calldata, bytes32, uint256) external pure returns (uint256 validationData) {
+        // typically here we'd check this signature
         return 0;
     }
 
