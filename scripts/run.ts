@@ -44,28 +44,27 @@ async function main() {
 
   prefundIfNecessary(entryPoint, paymasterAddr);
 
-  const signature = await signer0.signMessage(
-    Uint8Array.from(Buffer.from(ethers.id("weee").slice(2), "hex"))
+  const userOp: UserOperationStruct = {
+    sender,
+    nonce: await entryPoint.getNonce(sender, 0),
+    initCode,
+    callData,
+    callGasLimit: 10_000_000,
+    verificationGasLimit: 10_000_000,
+    preVerificationGas: 50_000,
+    maxFeePerGas: ethers.parseUnits("1000", "gwei"),
+    maxPriorityFeePerGas: ethers.parseUnits("500", "gwei"),
+    paymasterAndData: paymasterAddr,
+    signature: "0x",
+  };
+  const userOpHash = await entryPoint.getUserOpHash(userOp);
+  console.log(userOpHash);
+  userOp.signature = await signer0.signMessage(
+    Uint8Array.from(Buffer.from(userOpHash.slice(2), "hex"))
   );
-  // TODO: set more reasonable gas estimates?
-  const ops: UserOperationStruct[] | Typed = [
-    {
-      sender,
-      nonce: await entryPoint.getNonce(sender, 0),
-      initCode,
-      callData,
-      callGasLimit: 10_000_000,
-      verificationGasLimit: 10_000_000,
-      preVerificationGas: 50_000,
-      maxFeePerGas: ethers.parseUnits("1000", "gwei"),
-      maxPriorityFeePerGas: ethers.parseUnits("500", "gwei"),
-      paymasterAndData: paymasterAddr,
-      signature,
-    },
-  ];
 
   try {
-    const tx = await entryPoint.handleOps(ops, address0);
+    const tx = await entryPoint.handleOps([userOp], address0);
     const receipt = await tx.wait();
     console.log("op call successful!", receipt?.hash);
   } catch (ex: any) {

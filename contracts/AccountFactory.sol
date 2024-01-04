@@ -13,12 +13,12 @@ contract Account is IAccount {
         owner = _owner;
     }
 
-    function validateUserOp(UserOperation calldata op, bytes32, uint256)
+    function validateUserOp(UserOperation calldata op, bytes32 userOpHash, uint256)
         external
         view
         returns (uint256 validationData)
     {
-        address recovered = ECDSA.recover(ECDSA.toEthSignedMessageHash(keccak256("weee")), op.signature);
+        address recovered = ECDSA.recover(ECDSA.toEthSignedMessageHash(userOpHash), op.signature);
         return recovered == owner ? 0 : 1;
     }
 
