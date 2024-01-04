@@ -5,6 +5,7 @@ import { UserOperationStruct } from "../typechain-types/@account-abstraction/con
 
 const ENTRYPOINT = "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512";
 const FACTORY = "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0";
+const PAYMASTER = "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6";
 const FACTORY_NONCE = 1;
 
 async function main() {
@@ -38,10 +39,10 @@ async function main() {
   // execute is a custom method defined on the Account smart contract
   const callData = Account.interface.encodeFunctionData("execute");
 
-  const balanceOfAccount = await entryPoint.balanceOf(sender);
+  const balanceOfAccount = await entryPoint.balanceOf(PAYMASTER);
   if (balanceOfAccount == 0n) {
     // prefund, if necessary
-    await entryPoint.depositTo(sender, {
+    await entryPoint.depositTo(PAYMASTER, {
       value: ethers.parseUnits("100", "ether"),
     });
   }
@@ -58,7 +59,7 @@ async function main() {
       preVerificationGas: 50_000,
       maxFeePerGas: ethers.parseUnits("1000", "gwei"),
       maxPriorityFeePerGas: ethers.parseUnits("500", "gwei"),
-      paymasterAndData: "0x",
+      paymasterAndData: PAYMASTER,
       signature: "0x",
     },
   ];
