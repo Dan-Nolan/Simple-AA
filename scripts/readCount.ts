@@ -1,6 +1,6 @@
 import { ethers } from "hardhat";
 
-const ACCOUNT_ADDR = "0xCDf5F7dfd18b9A7D668d2BcA5CdCAA64565c321A";
+const ACCOUNT_ADDR = "0x75537828f2ce51be7289709686A69CbFDbB714F1";
 
 async function main() {
   const account = await ethers.getContractAt("Account", ACCOUNT_ADDR);

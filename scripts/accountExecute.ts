@@ -3,8 +3,8 @@ import { EntryPoint } from "../typechain-types";
 import { Typed } from "ethers";
 import { UserOperationStruct } from "../typechain-types/@account-abstraction/contracts/core/EntryPoint";
 
-const ENTRYPOINT = "0x5ff137d4b0fdcd49dca30c7cf57e578a026d2789";
-const FACTORY = "0x5081a39b8A5f0E35a8D959395a630b68B74Dd30f";
+const ENTRYPOINT = "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512";
+const FACTORY = "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0";
 const FACTORY_NONCE = 1;
 
 async function main() {
@@ -66,7 +66,7 @@ async function main() {
   try {
     const tx = await entryPoint.handleOps(ops, address0);
     const receipt = await tx.wait();
-    console.log("sent ops!", receipt);
+    console.log("op call successful!", receipt?.hash);
   } catch (ex: any) {
     if (ex.data.data.length > 2) {
       console.error("Return Data Error:", decodeReturnData(ex.data.data));
