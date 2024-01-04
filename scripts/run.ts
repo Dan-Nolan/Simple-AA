@@ -1,24 +1,27 @@
 import { ethers } from "hardhat";
-import { EntryPoint } from "../typechain-types";
 import { Typed } from "ethers";
 import { UserOperationStruct } from "../typechain-types/@account-abstraction/contracts/core/EntryPoint";
+import deployEntryPoint from "./helpers/deployEntryPoint";
+import deployFactory from "./helpers/deployFactory";
+import deployPaymaster from "./helpers/deployPaymaster";
+import prefundIfNecessary from "./helpers/prefundIfNecessary";
 
-const ENTRYPOINT = "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512";
-const FACTORY = "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0";
-const PAYMASTER = "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6";
 const FACTORY_NONCE = 1;
 
 async function main() {
+  const entryPoint = await deployEntryPoint();
+  const factory = await deployFactory();
+  const factoryAddress = await factory.getAddress();
+  const paymaster = await deployPaymaster();
+  const paymasterAddr = await paymaster.getAddress();
+
   const [signer0] = await ethers.getSigners();
   const address0 = await signer0.getAddress();
-
-  const EntryPoint = await ethers.getContractFactory("EntryPoint");
-  const entryPoint = EntryPoint.attach(ENTRYPOINT) as EntryPoint;
 
   const AccountFactory = await ethers.getContractFactory("AccountFactory");
 
   const sender = ethers.getCreateAddress({
-    from: FACTORY,
+    from: factoryAddress,
     nonce: FACTORY_NONCE,
   });
   console.log("Account Address:", sender);
@@ -31,7 +34,7 @@ async function main() {
       "createAccount",
       [address0]
     );
-    initCode = FACTORY + initCallData.slice(2);
+    initCode = factoryAddress + initCallData.slice(2);
   }
 
   const Account = await ethers.getContractFactory("Account");
@@ -39,14 +42,11 @@ async function main() {
   // execute is a custom method defined on the Account smart contract
   const callData = Account.interface.encodeFunctionData("execute");
 
-  const balanceOfAccount = await entryPoint.balanceOf(PAYMASTER);
-  if (balanceOfAccount == 0n) {
-    // prefund, if necessary
-    await entryPoint.depositTo(PAYMASTER, {
-      value: ethers.parseUnits("100", "ether"),
-    });
-  }
+  prefundIfNecessary(entryPoint, paymasterAddr);
 
+  const signature = await signer0.signMessage(
+    Uint8Array.from(Buffer.from(ethers.id("weee").slice(2), "hex"))
+  );
   // TODO: set more reasonable gas estimates?
   const ops: UserOperationStruct[] | Typed = [
     {
@@ -59,8 +59,8 @@ async function main() {
       preVerificationGas: 50_000,
       maxFeePerGas: ethers.parseUnits("1000", "gwei"),
       maxPriorityFeePerGas: ethers.parseUnits("500", "gwei"),
-      paymasterAndData: PAYMASTER,
-      signature: "0x",
+      paymasterAndData: paymasterAddr,
+      signature,
     },
   ];
 
@@ -69,7 +69,7 @@ async function main() {
     const receipt = await tx.wait();
     console.log("op call successful!", receipt?.hash);
   } catch (ex: any) {
-    if (ex.data.data.length > 2) {
+    if (ex?.data?.data?.length > 2) {
       console.error("Return Data Error:", decodeReturnData(ex.data.data));
     } else {
       console.log(ex);

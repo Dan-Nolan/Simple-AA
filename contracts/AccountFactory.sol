@@ -3,6 +3,7 @@ pragma solidity ^0.8.12;
 
 import "@account-abstraction/contracts/interfaces/IAccount.sol";
 import "@account-abstraction/contracts/core/EntryPoint.sol";
+import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
 contract Account is IAccount {
     address public owner;
@@ -12,9 +13,13 @@ contract Account is IAccount {
         owner = _owner;
     }
 
-    function validateUserOp(UserOperation calldata, bytes32, uint256) external pure returns (uint256 validationData) {
-        // typically here we'd check this signature
-        return 0;
+    function validateUserOp(UserOperation calldata op, bytes32, uint256)
+        external
+        view
+        returns (uint256 validationData)
+    {
+        address recovered = ECDSA.recover(ECDSA.toEthSignedMessageHash(keccak256("weee")), op.signature);
+        return recovered == owner ? 0 : 1;
     }
 
     function execute() external {
