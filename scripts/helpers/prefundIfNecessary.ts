@@ -9,7 +9,7 @@ export default async function prefundIfNecessary(
   if (balanceOfAccount == 0n) {
     // prefund, if necessary
     await entryPoint.depositTo(paymasterAddr, {
-      value: ethers.parseUnits("100", "ether"),
+      value: ethers.parseUnits(".2", "ether"),
     });
   }
 }

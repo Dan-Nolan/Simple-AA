@@ -18,6 +18,7 @@ contract Account is IAccount {
         view
         returns (uint256 validationData)
     {
+        // NOTE: this is not working now on testnet...
         address recovered = ECDSA.recover(ECDSA.toEthSignedMessageHash(userOpHash), op.signature);
         return recovered == owner ? 0 : 1;
     }
