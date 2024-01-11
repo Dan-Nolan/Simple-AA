@@ -8,10 +8,11 @@ const { ethers } = hre;
 const FACTORY_NONCE = 1;
 const ENTRYPOINT = "0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789";
 const PAYMASTER = "0x395ebd630d2b0b58c85a6ad25d611b5c2328c01f";
+const FACTORY = "0x5688EB1AB859fF477C8FdfdE4D68fbfdf29842DB";
 
 async function main() {
   const entryPoint = await ethers.getContractAt("EntryPoint", ENTRYPOINT);
-  const factory = await deployFactory();
+  const factory = await ethers.getContractAt("AccountFactory", FACTORY);
   const factoryAddress = await factory.getAddress();
   // const paymaster = await deployPaymaster();
   const paymaster = await ethers.getContractAt("Paymaster", PAYMASTER);
@@ -77,9 +78,23 @@ async function main() {
 
   try {
     console.log(userOp);
-    const tx = await entryPoint.handleOps([userOp], address0);
-    const receipt = await tx.wait();
-    console.log("op call successful!", receipt?.hash);
+    const opHash = await hre.network.provider.request({
+      method: "eth_sendUserOperation",
+      params: [userOp, ENTRYPOINT],
+    });
+    const response = await hre.network.provider.request({
+      method: "eth_getUserOperationByHash",
+      params: [opHash],
+    });
+    console.log(response);
+    setTimeout(async () => {
+      const { blockHash, transactionHash }: any =
+        await hre.network.provider.request({
+          method: "eth_getUserOperationByHash",
+          params: [opHash],
+        });
+      console.log({ blockHash, transactionHash });
+    }, 4000);
   } catch (ex: any) {
     if (ex?.data?.data?.length > 2) {
       console.error("Return Data Error:", decodeReturnData(ex.data.data));
